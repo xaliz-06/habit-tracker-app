@@ -1,33 +1,27 @@
-import { Hono } from 'hono'
-import { trpcServer } from '@hono/trpc-server'
-import {cors} from 'hono/cors'
-import { appRouter } from './routes/router'
-import { auth } from './lib/auth'
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { auth } from "./lib/auth";
+import { habitsRouter } from "./routes/habits";
 
-const app = new Hono()
+const app = new Hono().basePath("/api");
 
 app.use(
   cors({
     origin: ["http://localhost:3000"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["POST", "GET", "OPTIONS"],
+    exposeHeaders: ["Content-Length"],
+    maxAge: 600,
+    credentials: true,
   })
-)
-app.get('/health', (c) => {
+);
+app.get("/health", (c) => {
   return c.text("hello hono!");
-})
+});
 
-app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/auth/**", (c) => auth.handler(c.req.raw));
 
-app.use(
-  '/trpc/*',
-  trpcServer({
-    router: appRouter,
-    createContext: (_opts, c) => ({
-      headers: c.req.raw.headers  
-    }),
-  })
-)
+const routes = app.route("/habits", habitsRouter);
 
-export default {
-  port: 8080,
-  fetch: app.fetch,
-}
+export type AppType = typeof routes;
+export { app };
