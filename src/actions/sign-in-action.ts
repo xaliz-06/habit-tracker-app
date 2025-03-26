@@ -14,6 +14,6 @@ export async function signInAction(input: FormValues) {
     },
   });
 
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return data;
 }

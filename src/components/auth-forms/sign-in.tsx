@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { formSchema, FormValues } from "@/lib/types/signInDTO";
 import { cn } from "@/lib/utils";
 import { useSignIn } from "@/hooks/auth/use-sign-in";
+import { authClient } from "@/lib/auth-client";
 
 export const SignInForm = () => {
   const form = useForm<FormValues>({
@@ -27,8 +28,8 @@ export const SignInForm = () => {
     },
     mode: "onChange",
   });
-
-  const mutation = useSignIn(() => form.reset());
+  const { refetch } = authClient.useSession();
+  const mutation = useSignIn(() => form.reset(), refetch);
 
   const { isDirty, isValid } = form.formState;
 

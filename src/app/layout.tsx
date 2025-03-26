@@ -5,6 +5,7 @@ import "./globals.css";
 import Providers from "@/lib/providers/providers";
 import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const inter = Inter({
   variable: "--font-inter-sans",
@@ -25,7 +26,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
         <Providers>
-          <main className="flex bg-background flex-col min-h-screen">
+          <AppSidebar />
+          <main className="flex flex-1 bg-background flex-col min-h-screen">
             <Navbar />
             <div className="flex flex-col flex-1">{children}</div>
           </main>

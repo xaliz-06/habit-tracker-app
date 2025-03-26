@@ -49,26 +49,30 @@ const UserButton = ({ name, email }: Props) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="w-12 h-12 rounded-full" variant={"outline"}>
+        <Button
+          className="w-12 h-12 rounded-full cursor-pointer"
+          variant={"outline"}
+        >
           <User2Icon className="w-8 h-8" />
           <span className="sr-only">My account</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="mr-4 mt-2 w-[15vw] bg-background">
+      <DropdownMenuContent className="ml-6 mb-2 w-[15vw] bg-background">
         <DropdownMenuLabel className="font-bold text-lg">
           Hello!
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="flex flex-col space-y-1 p-2">
           <p className="font-semi-bold text-lg">{name}</p>
-          <p className="font-light text-sm tracking-tight">{email}</p>
+          <p className="font-light text-sm tracking-tight text-ellipsis overflow-hidden whitespace-nowrap">
+            {email}
+          </p>
         </div>
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Billing</DropdownMenuItem>
-        <DropdownMenuItem>Team</DropdownMenuItem>
-        <DropdownMenuItem>Subscription</DropdownMenuItem>
+        <DropdownMenuItem className="hover:bg-muted cursor-pointer">
+          Profile
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
 
         <Button

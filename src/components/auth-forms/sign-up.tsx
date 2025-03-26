@@ -20,6 +20,7 @@ import {
 } from "@/lib/types/createAccountDTO";
 import { cn } from "@/lib/utils";
 import { useSignUp } from "@/hooks/auth/use-sign-up";
+import { authClient } from "@/lib/auth-client";
 
 type FormValues = Omit<OriginalFormValues, "imageURL">;
 
@@ -35,7 +36,8 @@ export const SignUpForm = () => {
     mode: "onChange",
   });
 
-  const mutation = useSignUp(() => form.reset());
+  const { refetch } = authClient.useSession();
+  const mutation = useSignUp(() => form.reset(), refetch);
 
   const { isDirty, isValid } = form.formState;
 
