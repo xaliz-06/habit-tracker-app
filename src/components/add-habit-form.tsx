@@ -26,6 +26,11 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { colorOptions } from "@/lib/options/color";
+import { useMutation } from "@tanstack/react-query";
+import { createHabit } from "@/actions/create-new-habit";
+import { authClient } from "@/lib/auth-client";
+import { Loader2, Loader2Icon, MessageCircleWarningIcon } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 const formSchema = z.object({
   habitName: z.string().min(1, {
@@ -51,7 +56,68 @@ const AddHabitForm = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {}
+  const {
+    data: session,
+    isPending: isPendingUser, //loading state
+    error, //error object
+    refetch, //refetch the session
+  } = authClient.useSession();
+
+  if (error) {
+    refetch();
+    return (
+      <div className="text-center text-rose-500">
+        <MessageCircleWarningIcon className="h-4 w-4 " /> loading user. Please
+        try again.
+      </div>
+    );
+  }
+
+  const {
+    mutateAsync: addHabit,
+    isPending,
+    error: addError,
+    isSuccess,
+  } = useMutation({
+    mutationFn: createHabit,
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (session && session.user) {
+      const res = await addHabit({
+        name: values.habitName,
+        description: values.habitDescription,
+        color: values.habitColorScheme,
+        isRepeatable: values.habitIsRepeatable,
+        frequency: values.habitFrequency,
+        userId: session.user.id,
+      });
+
+      if (addError) {
+        toast.error("Failed to create habit. Please try again.");
+        return;
+      }
+
+      if (res.success) {
+        form.reset();
+        toast.success("Habit created successfully!");
+      }
+    }
+  };
+  if (isPendingUser) {
+    return (
+      <div className="max-w-md mx-auto mt-4 space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-10 w-1/2" />
+        </div>
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto mt-4 rounded-lg shadow-md">
@@ -176,13 +242,17 @@ const AddHabitForm = () => {
           <Button
             type="submit"
             className="w-full font-semibold text-lg cursor-pointer"
+            disabled={isPending}
           >
-            Create Habit
+            {isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              "Create Habit"
+            )}
           </Button>
         </form>
       </Form>
     </div>
   );
 };
-
 export default AddHabitForm;
