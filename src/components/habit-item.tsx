@@ -5,6 +5,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
+import { Habit } from "@/lib/types/habit";
+import { getTextColorClass } from "@/lib/colors/color";
+
+import { ColorOption, getCssColorVariable } from "@/lib/colors/colorUtils";
+
+interface Props {
+  habit: Habit;
+}
+
 // Static mock data that spans the entire year
 const generateMockData = (year: number) => {
   return [
@@ -87,7 +96,7 @@ const fetchYearData = async (year: number) => {
   return generateMockData(year);
 };
 
-const HabitItem = () => {
+const HabitItem = ({ habit }: Props) => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [activityData, setActivityData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,25 +165,40 @@ const HabitItem = () => {
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
-            <Button
-              onClick={() => handleYearChange(-1)}
-              variant={"outline"}
-              disabled={isLoading}
-              className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
+            <div className="flex flex-1 flex-col">
+              <h3
+                className={`font-semibold text-xl ${getTextColorClass(
+                  habit.color as ColorOption,
+                  600
+                )}`}
+              >
+                {habit.name}
+              </h3>
+              <p className="text-muted-foreground text-sm tracking-tighter">
+                {habit.description}
+              </p>
+            </div>
+            <div className="flex flex-1 items-center justify-between mb-4">
+              <Button
+                onClick={() => handleYearChange(-1)}
+                variant={"outline"}
+                disabled={isLoading}
+                className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
 
-            <h2 className="text-xl font-semibold">{currentYear}</h2>
+              <h2 className="text-xl font-semibold">{currentYear}</h2>
 
-            <Button
-              onClick={() => handleYearChange(1)}
-              variant={"outline"}
-              disabled={isLoading}
-              className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+              <Button
+                onClick={() => handleYearChange(1)}
+                variant={"outline"}
+                disabled={isLoading}
+                className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="relative">
@@ -207,6 +231,22 @@ const HabitItem = () => {
                       "data-tooltip-id": "react-tooltip",
                       "data-tooltip-html": `${activity.count} activities on ${activity.date}`,
                     });
+                  }}
+                  theme={{
+                    light: [
+                      getCssColorVariable(habit.color as ColorOption, 500),
+                      getCssColorVariable(habit.color as ColorOption, 600),
+                      getCssColorVariable(habit.color as ColorOption, 700),
+                      getCssColorVariable(habit.color as ColorOption, 800),
+                      getCssColorVariable(habit.color as ColorOption, 950),
+                    ],
+                    dark: [
+                      getCssColorVariable(habit.color as ColorOption, 950),
+                      getCssColorVariable(habit.color as ColorOption, 800),
+                      getCssColorVariable(habit.color as ColorOption, 700),
+                      getCssColorVariable(habit.color as ColorOption, 600),
+                      getCssColorVariable(habit.color as ColorOption, 500),
+                    ],
                   }}
                 />
                 <ReactTooltip id="react-tooltip" />

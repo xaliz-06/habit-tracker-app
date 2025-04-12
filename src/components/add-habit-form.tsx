@@ -25,7 +25,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { colorOptions } from "@/lib/options/color";
+import { colorSelectOptions } from "@/lib/colors/colorUtils";
 import { useMutation } from "@tanstack/react-query";
 import { createHabit } from "@/actions/create-new-habit";
 import { authClient } from "@/lib/auth-client";
@@ -66,9 +66,9 @@ const AddHabitForm = () => {
   if (error) {
     refetch();
     return (
-      <div className="text-center text-rose-500">
-        <MessageCircleWarningIcon className="h-4 w-4 " /> loading user. Please
-        try again.
+      <div className="text-center text-rose-500 flex items-center justify-center">
+        <MessageCircleWarningIcon className="h-4 w-4 " /> Error loading user.
+        Please try again.
       </div>
     );
   }
@@ -200,7 +200,7 @@ const AddHabitForm = () => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {colorOptions.map((color) => (
+                      {colorSelectOptions.map((color) => (
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center">
                             <div

@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../db/db";
-import { InferInsertModel } from "drizzle-orm";
+import { and, desc, eq, InferInsertModel, lt } from "drizzle-orm";
 import { habit as habitTable } from "../db/schema";
 import { frequencyEnum } from "../lib/enum";
 
@@ -78,11 +78,62 @@ export const habitsRouter = new Hono()
       );
     }
   })
-  .get("/", async (c) => {
-    return c.json({
-      users: users,
-    });
-  })
+  .get(
+    "/",
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string().min(1, "User ID is required"),
+        cursor: z.string().optional(),
+        limit: z.string().regex(/^\d+$/).transform(Number).default("3"),
+      })
+    ),
+    async (c) => {
+      const { userId, cursor, limit } = c.req.valid("query");
+
+      try {
+        let whereConditions = and(eq(habitTable.userId, userId));
+
+        if (cursor) {
+          const cursorHabit = await db.query.habit.findFirst({
+            where: eq(habitTable.id, cursor),
+          });
+
+          if (cursorHabit) {
+            whereConditions = and(
+              eq(habitTable.userId, userId),
+              lt(habitTable.createdAt, cursorHabit.createdAt)
+            );
+          }
+        }
+
+        const habits = await db
+          .select()
+          .from(habitTable)
+          .where(whereConditions)
+          .orderBy(desc(habitTable.createdAt))
+          .limit(limit);
+
+        const nextCursor =
+          habits.length === limit ? habits[habits.length - 1].id : null;
+
+        return c.json({
+          success: true,
+          data: habits,
+          nextCursor,
+        });
+      } catch (error) {
+        console.error("Error fetching habits:", error);
+        return c.json(
+          {
+            success: false,
+            message: "Failed to fetch habits",
+          },
+          500
+        );
+      }
+    }
+  )
   .get("/:id", async (c) => {
     const id = c.req.param("id");
 
