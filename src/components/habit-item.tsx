@@ -9,6 +9,7 @@ import { Habit } from "@/lib/types/habit";
 import { getTextColorClass } from "@/lib/colors/color";
 
 import { ColorOption, getCssColorVariable } from "@/lib/colors/colorUtils";
+import { useGetHabitCompletions } from "@/hooks/use-habit-completions";
 
 interface Props {
   habit: Habit;
@@ -98,14 +99,23 @@ const fetchYearData = async (year: number) => {
 
 const HabitItem = ({ habit }: Props) => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [activityData, setActivityData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const calendarContainerRef = useRef<HTMLDivElement>(null);
 
+  const {
+    data: activityData,
+    isLoading,
+    isError,
+    error,
+  } = useGetHabitCompletions(habit.id, currentYear);
+
   useEffect(() => {
-    if (activityData.length > 0 && calendarContainerRef.current) {
+    if (
+      activityData &&
+      activityData.length > 0 &&
+      calendarContainerRef.current
+    ) {
       setTimeout(() => {
         if (calendarContainerRef.current) {
           calendarContainerRef.current.scrollLeft =
@@ -136,87 +146,83 @@ const HabitItem = ({ habit }: Props) => {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchYearData(currentYear);
-        setActivityData(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [currentYear]);
-
   const handleYearChange = (change: number) => {
     setCurrentYear((prev) => prev + change);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <p className="text-red-500">Error: {error.message}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto mt-4 px-2 py-4 max-w-4xl relative">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    <div className="mx-auto mt-4 px-2 py-4 max-w-5xl relative">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-1 flex-col">
+          <h3
+            className={`font-semibold text-xl ${getTextColorClass(
+              habit.color as ColorOption,
+              600
+            )}`}
+          >
+            {habit.name}
+          </h3>
+          <p className="text-muted-foreground text-sm tracking-tighter">
+            {habit.description}
+          </p>
         </div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex flex-1 flex-col">
-              <h3
-                className={`font-semibold text-xl ${getTextColorClass(
-                  habit.color as ColorOption,
-                  600
-                )}`}
-              >
-                {habit.name}
-              </h3>
-              <p className="text-muted-foreground text-sm tracking-tighter">
-                {habit.description}
-              </p>
-            </div>
-            <div className="flex flex-1 items-center justify-between mb-4">
-              <Button
-                onClick={() => handleYearChange(-1)}
-                variant={"outline"}
-                disabled={isLoading}
-                className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
+        <div className="flex flex-1 items-center justify-between mb-4">
+          <Button
+            onClick={() => handleYearChange(-1)}
+            variant={"outline"}
+            disabled={isLoading}
+            className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
 
-              <h2 className="text-xl font-semibold">{currentYear}</h2>
+          <h2 className="text-xl font-semibold">{currentYear}</h2>
 
-              <Button
-                onClick={() => handleYearChange(1)}
-                variant={"outline"}
-                disabled={isLoading}
-                className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+          <Button
+            onClick={() => handleYearChange(1)}
+            variant={"outline"}
+            disabled={isLoading}
+            className="p-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
 
-          <div className="relative">
-            {canScrollLeft && (
-              <Button
-                onClick={() => handleScroll("left")}
-                variant={"outline"}
-                className="ml-2 absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg shadow-md opacity-80  transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            )}
-            <div
-              ref={calendarContainerRef}
-              className="overflow-hidden w-full min-h-[200px] relative"
-              onScroll={checkScrollPosition}
-            >
-              <div className="w-max">
+      <div className="relative">
+        {canScrollLeft && (
+          <Button
+            onClick={() => handleScroll("left")}
+            variant={"outline"}
+            className="ml-2 absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg shadow-md opacity-80  transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        )}
+        <div
+          ref={calendarContainerRef}
+          className="overflow-hidden w-full min-h-[200px] relative"
+          onScroll={checkScrollPosition}
+        >
+          <div className="w-max">
+            {activityData && activityData.length > 0 ? (
+              <>
                 <ActivityCalendar
                   data={activityData}
                   showWeekdayLabels
@@ -250,20 +256,26 @@ const HabitItem = ({ habit }: Props) => {
                   }}
                 />
                 <ReactTooltip id="react-tooltip" />
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground text-sm">
+                  No activities recorded yet.
+                </p>
               </div>
-            </div>
-            {canScrollRight && (
-              <Button
-                onClick={() => handleScroll("right")}
-                variant={"outline"}
-                className="mr-2 absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg shadow-md opacity-80 transition-colors cursor-pointer"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
             )}
           </div>
-        </>
-      )}
+        </div>
+        {canScrollRight && (
+          <Button
+            onClick={() => handleScroll("right")}
+            variant={"outline"}
+            className="mr-2 absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg shadow-md opacity-80 transition-colors cursor-pointer"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
